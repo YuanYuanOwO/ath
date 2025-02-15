@@ -48,15 +48,24 @@ public class Main {
         configFile = new File(dataFolder, FILENAME);
         if (!configFile.exists()) {
             configFile.createNewFile();
-            maxCount = 0;
-            achievedDate = "";
         } else {
-            BufferedReader reader = new BufferedReader(new FileReader(configFile));
-            String line = reader.readLine();
-            maxCount = Integer.parseInt(line);
-            achievedDate = reader.readLine();
-        }
+            try (BufferedReader reader = new BufferedReader(new FileReader(configFile))) {
+                String line = reader.readLine();
+                if (line == null || line.trim().isEmpty()) {
+                    maxCount = 0;
+                } else {
+                    try {
+                        maxCount = Integer.parseInt(line);
+                    } catch (NumberFormatException e) {
+                        logger.error("配置文件格式错误，无法解析整数，使用默认值 0");
+                        maxCount = 0;
+                    }
+                }
 
+                String dateLine = reader.readLine();
+                achievedDate = (dateLine == null) ? "" : dateLine;
+            }
+        }
     }
 
     @Subscribe
@@ -79,7 +88,7 @@ public class Main {
 
         for (Player player : server.getAllPlayers()) {
             player.sendMessage(
-                    Component.text(Util.toColor("&6✿ &7Server Reached New Online Players Record &b%player_count%&7 at &b%date% &6✿&7")
+                    Component.text(Util.toColor("&6✿ &7服务器达到了新的玩家在线记录 &b%player_count%&7 在 &b%date% &6✿&7")
                             .replaceAll("%player_count%", String.valueOf(maxCount))
                             .replaceAll("%date%", date)));
         }
